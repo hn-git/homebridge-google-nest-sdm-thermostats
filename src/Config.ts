@@ -5,5 +5,5 @@ export type Config = {
     refreshToken: string,
     subscriptionId: string,
     gcpProjectId?: string,
-    vEncoder?: string
+    isEcoSwitchDisabled?: boolean
 }

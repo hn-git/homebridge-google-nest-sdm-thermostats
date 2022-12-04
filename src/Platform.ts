@@ -1,14 +1,10 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './Settings';
-import { CameraAccessory } from './CameraAccessory';
 import {SmartDeviceManagement} from './sdm/Api';
 import {Config} from "./Config";
 import {ThermostatAccessory} from "./ThermostatAccessory";
-import {Camera} from "./sdm/Camera";
 import {Thermostat} from "./sdm/Thermostat";
-import {Doorbell} from "./sdm/Doorbell";
-import {DoorbellAccessory} from "./DoorbellAccessory";
 import EcoMode = require('./EcoMode');
 
 let IEcoMode: any;
@@ -21,6 +17,8 @@ let IEcoMode: any;
 export class Platform implements DynamicPlatformPlugin {
     public readonly Characteristic: typeof Characteristic & typeof IEcoMode;
     public readonly debugMode: boolean;
+    public readonly options: Config;
+
     private readonly smartDeviceManagement: SmartDeviceManagement | undefined;
     private readonly accessories: PlatformAccessory[] = [];
     private readonly EcoMode;
@@ -34,14 +32,20 @@ export class Platform implements DynamicPlatformPlugin {
         this.EcoMode = EcoMode(api);
         IEcoMode = this.EcoMode;
 
-        const options = config as unknown as Config;
+        this.options = config as unknown as Config;
 
-        if (!options || !options.projectId || !options.clientId || !options.clientSecret || !options.refreshToken || !options.subscriptionId) {
-            log.error(`${config.platform} is not configured correctly. The configuration provided was: ${JSON.stringify(options)}`)
+        if (!this.options ||
+            !this.options.projectId ||
+            !this.options.clientId ||
+            !this.options.clientSecret ||
+            !this.options.refreshToken ||
+            !this.options.subscriptionId
+        ) {
+            log.error(`${config.platform} is not configured correctly. The configuration provided was: ${JSON.stringify(this.options)}`);
             return;
         }
 
-        this.smartDeviceManagement = new SmartDeviceManagement(options, log);
+        this.smartDeviceManagement = new SmartDeviceManagement(this.options, log);
         // When this event is fired it means Homebridge has restored all cached accessories from disk.
         // Dynamic Platform plugins should only register new accessories after this event was fired,
         // in order to ensure they weren't added to homebridge already. This event can also be used
@@ -78,11 +82,22 @@ export class Platform implements DynamicPlatformPlugin {
 
         const devices = await this.smartDeviceManagement.list_devices();
 
-        if (!devices)
+        // filter for thermostats
+        // TODO: check if filter can be done in the API call
+        const thermostats = devices?.filter(device => device instanceof Thermostat);
+
+        // Check if there are non thermostat devices
+        if (devices && !thermostats || devices && thermostats && (devices.length != thermostats.length)) {
+            this.log.info('Unsupported device types discovered - this plugin ONLY supports thermostats.');
+        }
+
+        if (!thermostats) {
+            this.log.info('No thermostats discovered - discovery done.');
             return;
+        }
 
         // loop over the discovered devices and register each one if it has not already been registered
-        for (const device of devices) {
+        for (const device of thermostats) {
 
             // generate a unique id for the accessory this should be generated from
             // something globally unique, but constant, for example, the device serial
@@ -102,11 +117,7 @@ export class Platform implements DynamicPlatformPlugin {
                     existingAccessory.context.device = device;
                     this.api.updatePlatformAccessories([existingAccessory]);
 
-                    if (device instanceof Doorbell)
-                        new DoorbellAccessory(this.api, this.log, this, existingAccessory, device);
-                    else if (device instanceof Camera)
-                        new CameraAccessory(this.api, this.log, this, existingAccessory, device);
-                    else if (device instanceof Thermostat)
+                    if (device instanceof Thermostat)
                         new ThermostatAccessory(this.api, this.log, this, existingAccessory, device);
 
                     // update accessory cache with any changes to the accessory details and information
@@ -123,11 +134,7 @@ export class Platform implements DynamicPlatformPlugin {
 
                 let category;
 
-                if (device instanceof Doorbell)
-                    category = this.api.hap.Categories.VIDEO_DOORBELL;
-                else if (device instanceof Camera)
-                    category = this.api.hap.Categories.CAMERA;
-                else if (device instanceof Thermostat)
+                if (device instanceof Thermostat)
                     category = this.api.hap.Categories.THERMOSTAT;
 
                 // create a new accessory
@@ -136,13 +143,8 @@ export class Platform implements DynamicPlatformPlugin {
                 // the `context` property can be used to store any data about the accessory you may need
                 accessory.context.device = device;
 
-                if (device instanceof Doorbell)
-                    new DoorbellAccessory(this.api, this.log, this, accessory, device);
-                else if (device instanceof Camera)
-                    new CameraAccessory(this.api, this.log, this, accessory, device);
-                else if (device instanceof Thermostat)
+                if (device instanceof Thermostat)
                     new ThermostatAccessory(this.api, this.log, this, accessory, device);
-
 
                 // link the accessory to your platform
                 this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

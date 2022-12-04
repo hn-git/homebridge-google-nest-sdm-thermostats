@@ -1,7 +1,7 @@
 {
-  "pluginAlias": "homebridge-google-nest-sdm",
+  "pluginAlias": "homebridge-google-nest-sdm-thermostats",
   "pluginType": "platform",
-  "headerDisplay": "For help getting these values, please see the readme at: https://github.com/potmat/homebridge-google-nest-sdm#where-do-the-config-values-come-from Read it carefully, you must follow the instructions regarding the authorization URL if you want events to work properly.",
+  "headerDisplay": "For help getting these values, please see the readme at: https://github.com/hn-git/homebridge-google-nest-sdm-thermostatswhere-do-the-config-values-come-from Read it carefully, you must follow the instructions regarding the authorization URL if you want events to work properly.",
   "singular": "true",
   "schema": {
     "type": "object",
@@ -36,9 +36,9 @@
         "type": "string",
         "required": false
       },
-      "vEncoder": {
-        "title": "Video Encoder",
-        "type": "string",
+      "isEcoSwitchDisabled": {
+        "title": "Do not create a Switch accessory to indicate/control Eco Mode status (default false)",
+        "type": "boolean",
         "required": false
       }
     }

@@ -1,4 +1,4 @@
-import * as google from "googleapis";
+import * as google from "@googleapis/smartdevicemanagement";
 import * as Events from './Events';
 import {Logger} from "homebridge";
 import _ from "lodash";
@@ -61,16 +61,16 @@ export abstract class Device {
         return value;
     }
 
-    async executeCommand<T, U>(name: string, params?: T): Promise<U | undefined> {
+    async executeCommand<T extends { [key: string]: any; } | null | undefined, U>(name: string, params?: T): Promise<U | undefined> {
         this.log.debug(`Executing command ${name} with parameters ${JSON.stringify(params)}`, this.getDisplayName());
         try {
             const response = await this.smartdevicemanagement.enterprises.devices.executeCommand({
-                name: this.device?.name || undefined,
-                requestBody: {
-                    command: name,
-                    params: params
-                }
-            });
+                    name: this.device?.name || undefined,
+                    requestBody: {
+                        command: name,
+                        params: params
+                    }
+                });
             this.log.debug(`Execution of command ${name} returned ${JSON.stringify(response.data.results)}`, this.getDisplayName());
             return <U>response.data.results;
         } catch (error: any) {

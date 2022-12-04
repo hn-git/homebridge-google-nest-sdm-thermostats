@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import * as google from 'googleapis';
+import * as sdm from '@googleapis/smartdevicemanagement';
+import * as auth from 'google-auth-library';
 import * as pubsub from '@google-cloud/pubsub';
 import {Logger} from 'homebridge';
 import {Config} from "../Config";
@@ -12,8 +13,8 @@ import {UnknownDevice} from "./UnknownDevice";
 import {Display} from "./Display";
 
 export class SmartDeviceManagement {
-    private oauth2Client: google.Auth.OAuth2Client;
-    private smartdevicemanagement: google.smartdevicemanagement_v1.Smartdevicemanagement;
+    private oauth2Client: auth.OAuth2Client;
+    private smartdevicemanagement: sdm.smartdevicemanagement_v1.Smartdevicemanagement;
     private pubSubClient: pubsub.PubSub | undefined;
     private subscription: pubsub.Subscription | undefined;
     private projectId: string;
@@ -24,7 +25,7 @@ export class SmartDeviceManagement {
     constructor(config: Config, log: Logger) {
         this.log = log;
 
-        this.oauth2Client = new google.Auth.OAuth2Client(
+        this.oauth2Client = new auth.OAuth2Client(
             config.clientId,
             config.clientSecret
         );
@@ -32,7 +33,7 @@ export class SmartDeviceManagement {
         this.oauth2Client.setCredentials({
             refresh_token: config.refreshToken
         });
-        this.smartdevicemanagement = new google.smartdevicemanagement_v1.Smartdevicemanagement({
+        this.smartdevicemanagement = new sdm.smartdevicemanagement_v1.Smartdevicemanagement({
             auth: this.oauth2Client
         });
 
