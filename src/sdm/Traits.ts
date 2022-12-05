@@ -33,7 +33,7 @@ export enum FanTimerModeType {
 
 export interface Fan {
     timerMode: FanTimerModeType,
-    timerTimeout: string;
+    timerTimeout?: string;
 }
 
 export interface Humidity {

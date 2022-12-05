@@ -37,9 +37,28 @@
         "required": false
       },
       "isEcoSwitchDisabled": {
-        "title": "Do not create a Switch accessory to indicate/control Eco Mode status (default false)",
+        "title": "No thermostat Eco Mode switches",
+        "description": "Disables creating a Switch accessory to indicate/control Eco Mode status for each thermostat.",
         "type": "boolean",
         "required": false
+      },
+      "isFanSwitchDisabled": {
+        "title": "No thermostat fan accessories",
+        "description": "Disables creating a Fan accessory to control the fan for each thermostat.",
+        "type": "boolean",
+        "required": false
+      },
+      "fanDurationMinutes": {
+        "title": "Fan Duration",
+        "description": "Number of minutes to run the thermostat fan when turned on (default is 15)",
+        "type": "integer",
+        "required": false,
+        "placeholder": 15,
+        "minimum": 1,
+        "maximum": 720,
+        "condition": {
+          "functionBody": "return !model.isFanSwitchDisabled;"
+        }
       }
     }
   }

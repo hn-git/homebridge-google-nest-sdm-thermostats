@@ -1,6 +1,7 @@
 import * as Traits from './Traits';
 
 export enum Constants {
+    DeviceFan_SetTimer = 'sdm.devices.commands.Fan.SetTimer',
     ThermostatTemperatureSetpoint_SetHeat = 'sdm.devices.commands.ThermostatTemperatureSetpoint.SetHeat',
     ThermostatTemperatureSetpoint_SetCool = 'sdm.devices.commands.ThermostatTemperatureSetpoint.SetCool',
     ThermostatTemperatureSetpoint_SetRange = 'sdm.devices.commands.ThermostatTemperatureSetpoint.SetRange',
@@ -11,6 +12,11 @@ export enum Constants {
     CameraLiveStream_GenerateWebRtcStream = 'sdm.devices.commands.CameraLiveStream.GenerateWebRtcStream',
     CameraLiveStream_StopWebRtcStream = 'sdm.devices.commands.CameraLiveStream.StopWebRtcStream',
     CameraEventImage_GenerateImage = 'sdm.devices.commands.CameraEventImage.GenerateImage'
+}
+
+export interface DeviceFan_SetTimer {
+    timerMode: Traits.FanTimerModeType;
+    duration?: string;
 }
 
 export interface ThermostatTemperatureSetpoint_SetHeat {

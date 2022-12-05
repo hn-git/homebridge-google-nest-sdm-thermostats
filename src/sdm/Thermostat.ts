@@ -20,6 +20,7 @@ export class Thermostat extends Device {
     onTargetTemperatureRangeChanged: ((range: TemperatureRange) => void) | undefined;
     onHvacChanged: ((status: Traits.HvacStatusType) => void) | undefined;
     onHumidityChanged: ((humidity: number) => void) | undefined;
+    onFanTraitsChanged: ((mode: Traits.Fan) => void) | undefined;
 
     event(event: Events.ResourceTraitEvent) {
         super.event(event);
@@ -83,6 +84,12 @@ export class Thermostat extends Device {
                     if (this.onTemperatureUnitsChanged) {
                         const traitVale = value as Traits.Settings;
                         this.onTemperatureUnitsChanged(traitVale.temperatureScale!);
+                    }
+                    break;
+                case Traits.Constants.Fan:
+                    if (this.onFanTraitsChanged) {
+                        const traitValue = value as Traits.Fan;
+                        this.onFanTraitsChanged(traitValue);
                     }
                     break;
                 default:
@@ -248,6 +255,21 @@ export class Thermostat extends Device {
     async setEco(mode: EcoModeType) {
         await this.executeCommand<Commands.ThermostatEco_SetMode, void>(Commands.Constants.ThermostatEco_SetMode, {
             mode: mode
+        });
+    }
+
+    async getFanTraits(): Promise<Traits.Fan | null> {
+        return await this.getTrait<Traits.Fan>(Traits.Constants.Fan);
+    }
+
+    async setFanTimer(mode: Traits.FanTimerModeType, seconds?: number) {
+        seconds || await this.executeCommand<Commands.DeviceFan_SetTimer, void>(Commands.Constants.DeviceFan_SetTimer, {
+            timerMode: mode,
+        });
+
+        seconds && await this.executeCommand<Commands.DeviceFan_SetTimer, void>(Commands.Constants.DeviceFan_SetTimer, {
+            timerMode: mode,
+            duration: seconds + 's'
         });
     }
 }

@@ -56,6 +56,16 @@ export class ThermostatAccessory extends Accessory<Thermostat> {
                 .onSet(this.handleEcoModeSet.bind(this));
         }
 
+        let fanService = accessory.getService('Fan');
+        if (!platform.options.isFanSwitchDisabled) {
+            fanService ||= accessory.addService(this.api.hap.Service.Fan, 'Fan', 'hvac_fan');
+            fanService.getCharacteristic(this.platform.Characteristic.On)
+                    .onGet(this.handleFanSwitchStateGet.bind(this))
+                    .onSet(this.handleFanSwitchStateSet.bind(this));
+        } else {
+            fanService && accessory.removeService(fanService)
+        }
+
         this.service.getCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState)
             .onGet(this.handleCurrentHeatingCoolingStateGet.bind(this));
 
@@ -82,6 +92,7 @@ export class ThermostatAccessory extends Accessory<Thermostat> {
         this.device.onHvacChanged = this.handleCurrentHeatingCoolingStateUpdate.bind(this);
         this.device.onModeChanged = this.handleTargetHeatingCoolingStateUpdate.bind(this);
         this.device.onEcoChanged = this.handleEcoUpdate.bind(this);
+        this.device.onFanTraitsChanged = this.handleFanTraitsUpdate.bind(this);
     }
 
     private async setupEvents() {
@@ -453,5 +464,22 @@ export class ThermostatAccessory extends Accessory<Thermostat> {
     private async handleEcoModeSet(value:CharacteristicValue) {
         this.log.debug('Triggered SET EcoMode:' + value, this.accessory.displayName);
         await this.device.setEco(value ? EcoModeType.MANUAL_ECO : EcoModeType.OFF);
+    }
+
+    private async handleFanSwitchStateGet(): Promise<CharacteristicValue> {
+        this.log.debug('Triggered get fan state', this.accessory.displayName);
+        return await this.device.getFanTraits().then(fan => fan?.timerMode === Traits.FanTimerModeType.ON);
+    }
+
+    private async handleFanSwitchStateSet(value: CharacteristicValue) {
+        this.log.debug('Triggered set fan state:' + value, this.accessory.displayName);
+        await this.device.setFanTimer(value ? Traits.FanTimerModeType.ON : Traits.FanTimerModeType.OFF,
+            this.platform.options.fanDurationMinutes && this.platform.options.fanDurationMinutes * 60);
+    }
+
+    private handleFanTraitsUpdate(fan: Traits.Fan) {
+        this.log.debug(`New remote fan timer state: ${fan.timerMode}, expiry time ${fan.timerTimeout}`, this.accessory.displayName);
+
+        this.accessory.getService('Fan')?.updateCharacteristic(this.platform.Characteristic.On, fan.timerMode === Traits.FanTimerModeType.ON);
     }
 }

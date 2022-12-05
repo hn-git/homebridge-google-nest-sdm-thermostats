@@ -5,5 +5,7 @@ export type Config = {
     refreshToken: string,
     subscriptionId: string,
     gcpProjectId?: string,
-    isEcoSwitchDisabled?: boolean
+    isEcoSwitchDisabled?: boolean,
+    isFanSwitchDisabled?: boolean,
+    fanDurationMinutes?: number
 }
